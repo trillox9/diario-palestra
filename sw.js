@@ -1,8 +1,8 @@
-const VERSION = "ade6ad0744cf6545";
+const VERSION = "c12aea12555bd5d6";
 const ROOT = new URL('./', self.location.href);
 const PREFIX = 'diario-shell-' + ROOT.pathname + '-';
 const CACHE = PREFIX + VERSION;
-const ASSETS = ["assets/index-Cy8WdPEC.css","assets/index-Qjz8fW7J.js","icon-192.png","icon-512.png","icon-maskable.png","icon.svg","index.html","manifest.webmanifest"].map(path => new URL(path, ROOT).href);
+const ASSETS = ["assets/index-D0XvrHId.css","assets/index-Tomh039U.js","icon-192.png","icon-512.png","icon-maskable.png","icon.svg","index.html","manifest.webmanifest"].map(path => new URL(path, ROOT).href);
 self.addEventListener('install', event => {
   // Fail the install if any asset is missing. The previous working app survives.
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)));
