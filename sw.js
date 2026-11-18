@@ -1,15 +1,19 @@
-const VERSION = "acb1cf6c3f364561";
+const VERSION = "1c8e9159dfa3e5fc";
 const ROOT = new URL('./', self.location.href);
 const PREFIX = 'diario-shell-' + ROOT.pathname + '-';
 const CACHE = PREFIX + VERSION;
-const ASSETS = ["assets/index-BnZgvAx0.js","assets/index-mq_LwT_T.css","icon-192.png","icon-512.png","icon-maskable.png","icon.svg","index.html","manifest.webmanifest"].map(path => new URL(path, ROOT).href);
+const ASSETS = ["assets/index-Ded3n4SC.js","assets/index-H8oyaF2E.css","icon-192.png","icon-512.png","icon-maskable.png","icon.svg","index.html","manifest.webmanifest"].map(path => new URL(path, ROOT).href);
 self.addEventListener('install', event => {
   // Fail the install if any asset is missing. The previous working app survives.
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)));
 });
+self.addEventListener('message', event => {
+  if (event.data === 'activate-update' && event.source?.url === new URL('aggiorna.html', ROOT).href) {
+    event.waitUntil(self.skipWaiting());
+  }
+});
 self.addEventListener('activate', event => {
-  // Activation waits for the previous version's windows to close. No skipWaiting:
-  // never reload an open workout or clear user data during an update.
+  // Existing windows keep running unless the user navigates or reloads.
   event.waitUntil((async () => {
     for (const key of await caches.keys()) if (key.startsWith(PREFIX) && key !== CACHE) await caches.delete(key);
     await self.clients.claim();

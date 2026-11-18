@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#101a23">
+    <title>Aggiorna Diario palestra</title>
+    <style>
+      :root { color-scheme: dark; font: 1rem/1.5 system-ui, sans-serif; background: #0d1219; color: #f1f4f8; }
+      main { max-width: 26rem; margin: 3rem auto; padding: 0 1.25rem; }
+      h1 { line-height: 1.2; }
+      button { display: block; width: 100%; min-height: 44px; margin: 1.5rem 0 1rem; border: 0; border-radius: .7rem; background: #c6f36c; color: #17210d; font: inherit; font-weight: 650; cursor: pointer; }
+      button:disabled { opacity: .65; cursor: default; }
+      a { color: #c6f36c; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Aggiorna Diario palestra</h1>
+      <p>Se hai una seduta aperta, aspetta che mostri <strong>Sul telefono</strong> prima di aggiornare. Gli allenamenti salvati restano disponibili.</p>
+      <button type="button" id="update">Aggiorna e apri il diario</button>
+      <p role="status" id="status"></p>
+      <a href="./">Torna al diario</a>
+    </main>
+    <script>
+      const button = document.querySelector('#update');
+      const status = document.querySelector('#status');
+
+      function waitForState(worker, states) {
+        return new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => finish(false), 15000);
+          function finish(success) {
+            clearTimeout(timeout);
+            worker.removeEventListener('statechange', observe);
+            if (success) resolve();
+            else reject(new Error('Aggiornamento interrotto'));
+          }
+          function observe() {
+            if (states.includes(worker.state)) finish(true);
+            else if (worker.state === 'redundant') finish(false);
+          }
+          worker.addEventListener('statechange', observe);
+          observe();
+        });
+      }
+
+      button.addEventListener('click', async () => {
+        button.disabled = true;
+        status.textContent = 'Aggiornamento in corso…';
+        try {
+          const registration = await navigator.serviceWorker.register('./sw.js', {updateViaCache: 'none'});
+          await registration.update();
+          if (registration.installing) {
+            await waitForState(registration.installing, ['installed', 'activating', 'activated']);
+          }
+          const waiting = registration.waiting;
+          if (waiting) {
+            waiting.postMessage('activate-update');
+            await waitForState(waiting, ['activated']);
+          } else if (registration.active) {
+            await waitForState(registration.active, ['activated']);
+          }
+          location.replace('./');
+        } catch {
+          status.textContent = 'Aggiornamento incompleto. Controlla la connessione e riprova.';
+          button.disabled = false;
+        }
+      });
+    </script>
+  </body>
+</html>
